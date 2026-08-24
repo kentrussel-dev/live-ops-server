@@ -4,6 +4,7 @@ import { connectDB } from './config/db';
 import { ENV } from './config/env';
 import { User } from './models/User';
 import { initSocketIO } from './socket';
+import { startTelemetrySimulator, stopTelemetrySimulator } from './services/telemetrySimulator';
 
 async function startServer() {
   try {
@@ -20,11 +21,15 @@ async function startServer() {
     // Attach Socket.IO for real-time channels, DMs, and notifications
     initSocketIO(httpServer);
 
+    // Start background game server telemetry simulator (12s interval)
+    startTelemetrySimulator(12000);
+
     httpServer.listen(ENV.PORT, () => {
       console.log(`\n======================================================`);
       console.log(`🚀 AETHERIA LIVE-OPS REST API & WEBSOCKET SERVER READY`);
       console.log(`📡 URL: http://localhost:${ENV.PORT}`);
       console.log(`💬 Real-Time Discuss Hub: Socket.IO initialized`);
+      console.log(`🎮 Telemetry Simulator: Active (12s fleet fluctuation)`);
       console.log(`📖 Swagger Docs: http://localhost:${ENV.PORT}/api/docs`);
       console.log(`🩺 Health check: http://localhost:${ENV.PORT}/api/health`);
       console.log(`======================================================\n`);
@@ -32,6 +37,7 @@ async function startServer() {
 
     const shutdown = async () => {
       console.log('\n[Server] Gracefully shutting down...');
+      stopTelemetrySimulator();
       httpServer.close(() => {
         console.log('[Server] HTTP and Socket listener closed.');
         process.exit(0);
