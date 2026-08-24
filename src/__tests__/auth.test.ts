@@ -89,10 +89,16 @@ describe('Auth & Root Admin Management Endpoints', () => {
     expect(res.body.data.users.length).toBeGreaterThan(0);
   });
 
-  it('should forbid non-admin (editor) from accessing user management (403)', async () => {
+  it('should forbid non-admin (editor) from provisioning users (403)', async () => {
     const res = await request(app)
-      .get('/api/v1/auth/users')
-      .set('Authorization', `Bearer ${editorToken}`);
+      .post('/api/v1/auth/users')
+      .set('Authorization', `Bearer ${editorToken}`)
+      .send({
+        username: 'unauthorized_user',
+        email: 'unauth@aetheria.gg',
+        password: 'Password123!',
+        role: 'readonly_viewer',
+      });
 
     expect(res.status).toBe(403);
   });

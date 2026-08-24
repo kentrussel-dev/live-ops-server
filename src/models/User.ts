@@ -8,6 +8,10 @@ export interface IUserDocument extends Document {
   passwordHash: string;
   role: UserRole;
   department: string;
+  position?: string;
+  departmentDescription?: string;
+  bio?: string;
+  statusMessage?: string;
   avatarUrl?: string;
   lastLoginAt?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -45,6 +49,22 @@ const userSchema = new Schema<IUserDocument>(
     department: {
       type: String,
       default: 'Live Operations',
+    },
+    position: {
+      type: String,
+      default: 'Live-Ops Specialist',
+    },
+    departmentDescription: {
+      type: String,
+      default: 'Live operations, incident mitigation, and game service infrastructure management.',
+    },
+    bio: {
+      type: String,
+      default: 'Studio operations engineer managing live-service game infrastructure and content releases.',
+    },
+    statusMessage: {
+      type: String,
+      default: 'On Duty • Operational',
     },
     avatarUrl: {
       type: String,

@@ -133,11 +133,17 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
           content: string;
           recipientId?: string;
           attachments?: any[];
+          replyTo?: {
+            messageId?: string;
+            senderName?: string;
+            senderAvatarUrl?: string;
+            content?: string;
+          };
         },
         callback?: (res: any) => void
       ) => {
         try {
-          const { channelId, content, recipientId, attachments } = payload;
+          const { channelId, content, recipientId, attachments, replyTo } = payload;
           if (!content?.trim() && (!attachments || attachments.length === 0)) {
             if (callback) callback({ success: false, error: 'Message content or attachment required' });
             return;
@@ -156,6 +162,7 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
             },
             recipientId: recipientId || undefined,
             content: content.trim(),
+            replyTo: replyTo || undefined,
             status: 'delivered',
             seenBy: [],
             attachments: attachments || [],

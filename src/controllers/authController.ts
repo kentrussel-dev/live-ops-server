@@ -1,7 +1,11 @@
+import mongoose from 'mongoose';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
+import { IssueTicket } from '../models/IssueTicket';
+import { PatchNote } from '../models/PatchNote';
+import { GameEvent } from '../models/GameEvent';
 import { AuditLog } from '../models/AuditLog';
 import { ENV } from '../config/env';
 import { z } from 'zod';
@@ -222,6 +226,58 @@ export async function getUsers(req: Request, res: Response, next: NextFunction):
       success: true,
       data: {
         users,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getUserProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    let user = null;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      user = await User.findById(id).select('-passwordHash');
+    }
+
+    if (!user) {
+      user = await User.findOne({ username: id }).select('-passwordHash');
+    }
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'ERR_USER_NOT_FOUND', message: 'Operator profile not found.' },
+      });
+      return;
+    }
+
+    // Aggregate user metrics & recent assigned tickets
+    const [assignedTickets, totalAssignedTickets, openTickets, resolvedTickets, authoredPatchesCount, createdEventsCount] = await Promise.all([
+      IssueTicket.find({ assigneeId: user._id }).sort({ createdAt: -1 }).limit(10),
+      IssueTicket.countDocuments({ assigneeId: user._id }),
+      IssueTicket.countDocuments({ assigneeId: user._id, status: { $in: ['reported', 'investigating', 'in_progress'] } }),
+      IssueTicket.countDocuments({ assigneeId: user._id, status: { $in: ['fixed_staging', 'verified_qa', 'closed'] } }),
+      PatchNote.countDocuments({ createdBy: user.username }),
+      GameEvent.countDocuments({ 'audit.createdBy': user.username }),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        profile: {
+          ...user.toObject(),
+          assignedTickets,
+          metrics: {
+            totalAssignedTickets,
+            openTickets,
+            resolvedTickets,
+            authoredPatchesCount,
+            createdEventsCount,
+          },
+        },
       },
     });
   } catch (err) {

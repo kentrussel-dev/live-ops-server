@@ -12,6 +12,12 @@ export interface IChatMessageDocument extends Document {
   };
   recipientId?: Types.ObjectId;
   content: string;
+  replyTo?: {
+    messageId?: string;
+    senderName?: string;
+    senderAvatarUrl?: string;
+    content?: string;
+  };
   status: 'delivered' | 'seen';
   seenBy: Array<{
     userId: Types.ObjectId;
@@ -55,6 +61,12 @@ const chatMessageSchema = new Schema<IChatMessageDocument>(
       type: String,
       required: true,
       trim: true,
+    },
+    replyTo: {
+      messageId: { type: String },
+      senderName: { type: String },
+      senderAvatarUrl: { type: String },
+      content: { type: String },
     },
     status: {
       type: String,

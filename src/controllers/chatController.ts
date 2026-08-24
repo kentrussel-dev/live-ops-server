@@ -190,7 +190,7 @@ export async function getMessages(req: Request, res: Response, next: NextFunctio
 export async function sendMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { channelId } = req.params;
-    const { content, recipientId, attachments } = req.body;
+    const { content, recipientId, attachments, replyTo } = req.body;
     const userId = req.user?.userId;
 
     const fullUser = await User.findById(userId);
@@ -206,6 +206,7 @@ export async function sendMessage(req: Request, res: Response, next: NextFunctio
       },
       recipientId: recipientId || undefined,
       content: content.trim(),
+      replyTo: replyTo || undefined,
       attachments: attachments || [],
       reactions: [],
     });

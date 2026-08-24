@@ -4,6 +4,7 @@ import {
   login,
   bootstrapWithMasterKey,
   getCurrentUser,
+  getUserProfile,
   getUsers,
   createUser,
   deleteUser,
@@ -31,8 +32,9 @@ export const authRouter = Router();
 authRouter.post('/login', authLimiter, validateSchema(loginSchema), login);
 authRouter.post('/master-bootstrap', authLimiter, validateSchema(masterKeySchema), bootstrapWithMasterKey);
 authRouter.get('/me', authenticateToken, getCurrentUser);
+authRouter.get('/profile/:id', authenticateToken, getUserProfile);
 
-// Admin-only User Management
-authRouter.get('/users', authenticateToken, requireRoles(['admin']), getUsers);
+// Operator Directory (All authenticated staff) & Admin Management
+authRouter.get('/users', authenticateToken, getUsers);
 authRouter.post('/users', authenticateToken, requireRoles(['admin']), validateSchema(createUserSchema), createUser);
 authRouter.delete('/users/:id', authenticateToken, requireRoles(['admin']), deleteUser);
