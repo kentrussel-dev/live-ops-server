@@ -12,6 +12,8 @@ import { issueRouter } from './routes/issueRoutes';
 import { timelineRouter } from './routes/timelineRoutes';
 import { systemRouter } from './routes/systemRoutes';
 import { serverRouter } from './routes/serverRoutes';
+import { chatRouter } from './routes/chatRoutes';
+import { notificationRouter } from './routes/notificationRoutes';
 import { errorHandler } from './middleware/errorHandler';
 
 export function createApp() {
@@ -63,6 +65,8 @@ export function createApp() {
   app.use('/api/v1/timeline', timelineRouter);
   app.use('/api/v1/system', systemRouter);
   app.use('/api/v1/servers', serverRouter);
+  app.use('/api/v1/chat', chatRouter);
+  app.use('/api/v1/notifications', notificationRouter);
 
   // 404 Route handler
   app.use((req, res) => {

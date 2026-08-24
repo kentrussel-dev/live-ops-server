@@ -4,10 +4,13 @@ import {
   getIssueById,
   createIssue,
   updateIssue,
+  assignIssue,
   changeIssueStatus,
-  addIssueNote,
+  addInternalNote,
+  deleteIssue,
   createIssueSchema,
   updateIssueSchema,
+  assignIssueSchema,
   changeStatusSchema,
   addNoteSchema,
 } from '../controllers/issueController';
@@ -21,11 +24,18 @@ issueRouter.use(authenticateToken);
 issueRouter.get('/', getIssues);
 issueRouter.get('/:id', getIssueById);
 
-// All authenticated roles (including QA readonly viewers) can report new issues and append investigation notes
+// All authenticated roles can report new issues and append investigation notes
 issueRouter.post('/', validateSchema(createIssueSchema), createIssue);
-issueRouter.post('/:id/notes', validateSchema(addNoteSchema), addIssueNote);
+issueRouter.post('/:id/notes', validateSchema(addNoteSchema), addInternalNote);
 
-// Status transitions and modifications require liveops_editor or admin
+// Assignment, Status transitions and modifications require liveops_editor or admin
+issueRouter.post(
+  '/:id/assign',
+  requireRoles('liveops_editor', 'admin'),
+  validateSchema(assignIssueSchema),
+  assignIssue
+);
+
 issueRouter.put(
   '/:id',
   requireRoles('liveops_editor', 'admin'),
@@ -38,4 +48,10 @@ issueRouter.patch(
   requireRoles('liveops_editor', 'admin'),
   validateSchema(changeStatusSchema),
   changeIssueStatus
+);
+
+issueRouter.delete(
+  '/:id',
+  requireRoles('admin'),
+  deleteIssue
 );
