@@ -142,4 +142,41 @@ describe('Technical Game Server Fleet & SRE Telemetry Endpoints', () => {
     expect(editRes.body.data.server.pingMs).toBe(12);
     expect(editRes.body.data.server.currentPlayers).toBe(4990);
   });
+
+  it('9. Root Admin can seed the complete Content Operations preset', async () => {
+    const contentRes = await request(app)
+      .post('/api/v1/servers/preset/content')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(contentRes.status).toBe(201);
+    expect(contentRes.body.success).toBe(true);
+    expect(contentRes.body.data.counts.events).toBeGreaterThan(0);
+    expect(contentRes.body.data.counts.patches).toBeGreaterThan(0);
+    expect(contentRes.body.data.counts.shopItems).toBeGreaterThan(0);
+    expect(contentRes.body.data.counts.issues).toBeGreaterThan(0);
+  });
+
+  it('10. Root Admin can clear all Content Operations preset records', async () => {
+    const clearContentRes = await request(app)
+      .delete('/api/v1/servers/preset/content')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(clearContentRes.status).toBe(200);
+    expect(clearContentRes.body.success).toBe(true);
+  });
+
+  it('11. Root Admin can clear the entire Game Server fleet', async () => {
+    const clearFleetRes = await request(app)
+      .delete('/api/v1/servers/preset/fleet')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(clearFleetRes.status).toBe(200);
+    expect(clearFleetRes.body.success).toBe(true);
+
+    const listRes = await request(app)
+      .get('/api/v1/servers')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(listRes.body.data.servers.length).toBe(0);
+  });
 });

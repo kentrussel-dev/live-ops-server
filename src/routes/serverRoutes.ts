@@ -7,7 +7,10 @@ import {
   toggleServerDrain,
   rebootServer,
   deleteServer,
+  clearServerFleet,
   seedServerFleetPreset,
+  seedContentPreset,
+  clearContentPreset,
   createServerSchema,
   updateServerSchema,
   updateStatusSchema,
@@ -20,9 +23,14 @@ export const serverRouter = Router();
 // Read-only Fleet Telemetry (All Authenticated Staff)
 serverRouter.get('/', authenticateToken, getServers);
 
-// Server Infrastructure Mutations (Root Admin Only)
+// Server Infrastructure & Content Preset Utilities (Root Admin Only)
 serverRouter.post('/', authenticateToken, requireRoles('admin'), validateSchema(createServerSchema), createServer);
 serverRouter.post('/preset', authenticateToken, requireRoles('admin'), seedServerFleetPreset);
+serverRouter.delete('/preset/fleet', authenticateToken, requireRoles('admin'), clearServerFleet);
+serverRouter.post('/preset/content', authenticateToken, requireRoles('admin'), seedContentPreset);
+serverRouter.delete('/preset/content', authenticateToken, requireRoles('admin'), clearContentPreset);
+
+// Server Node Mutations (Root Admin Only)
 serverRouter.put('/:id', authenticateToken, requireRoles('admin'), validateSchema(updateServerSchema), updateServer);
 serverRouter.patch('/:id/status', authenticateToken, requireRoles('admin'), validateSchema(updateStatusSchema), updateServerStatus);
 serverRouter.patch('/:id/drain', authenticateToken, requireRoles('admin'), toggleServerDrain);
