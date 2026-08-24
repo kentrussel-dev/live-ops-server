@@ -88,4 +88,37 @@ describe('Discuss Hub, Channels & Real-Time Chat Endpoints', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.channel.isDirectMessage).toBe(true);
   });
+
+  it('6. POST /api/v1/chat/messages/:messageId/react - Enforces strictly 1 reaction per user', async () => {
+    const msgRes = await request(app)
+      .get(`/api/v1/chat/channels/${createdChannelId}/messages`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    const messageId = msgRes.body.data.messages[0]._id;
+
+    // First reaction: 👍
+    const r1 = await request(app)
+      .post(`/api/v1/chat/messages/${messageId}/react`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reaction: '👍' });
+    expect(r1.status).toBe(200);
+    expect(r1.body.data.message.reactions.length).toBe(1);
+    expect(r1.body.data.message.reactions[0].reaction).toBe('👍');
+
+    // Second reaction: ❤️ (Should REPLACE 👍, not add both)
+    const r2 = await request(app)
+      .post(`/api/v1/chat/messages/${messageId}/react`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reaction: '❤️' });
+    expect(r2.status).toBe(200);
+    expect(r2.body.data.message.reactions.length).toBe(1);
+    expect(r2.body.data.message.reactions[0].reaction).toBe('❤️');
+
+    // Third reaction: click ❤️ again (Should REMOVE reaction entirely)
+    const r3 = await request(app)
+      .post(`/api/v1/chat/messages/${messageId}/react`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ reaction: '❤️' });
+    expect(r3.status).toBe(200);
+    expect(r3.body.data.message.reactions.length).toBe(0);
+  });
 });

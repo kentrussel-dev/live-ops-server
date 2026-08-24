@@ -254,22 +254,31 @@ export async function toggleReaction(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    let existingReaction = message.reactions.find((r) => r.reaction === reaction);
-    if (existingReaction) {
-      if (existingReaction.users.includes(username)) {
-        existingReaction.users = existingReaction.users.filter((u) => u !== username);
-        if (existingReaction.users.length === 0) {
-          message.reactions = message.reactions.filter((r) => r.reaction !== reaction);
-        }
+    // Check if the user already reacted with THIS exact emoji
+    const alreadyHadThisReaction = message.reactions.some(
+      (r) => r.reaction === reaction && r.users.includes(username)
+    );
+
+    // Remove user from ALL current reactions on this message (ensures strictly 1 reaction per user)
+    message.reactions.forEach((r) => {
+      r.users = r.users.filter((u) => u !== username);
+    });
+
+    // If they did not already have this reaction, add it (toggles on / replaces previous reaction)
+    if (!alreadyHadThisReaction) {
+      const targetReaction = message.reactions.find((r) => r.reaction === reaction);
+      if (targetReaction) {
+        targetReaction.users.push(username);
       } else {
-        existingReaction.users.push(username);
+        message.reactions.push({
+          reaction,
+          users: [username],
+        });
       }
-    } else {
-      message.reactions.push({
-        reaction,
-        users: [username],
-      });
     }
+
+    // Clean up any reaction entries that have 0 users left
+    message.reactions = message.reactions.filter((r) => r.users.length > 0);
 
     await message.save();
 
