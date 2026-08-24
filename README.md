@@ -1,93 +1,107 @@
-# Aetheria Live-Ops REST API Server
+# Aetheria Live-Ops REST API
 
-A production-ready Node.js & TypeScript backend service powering the **Aetheria Live-Ops Console**. Provides high-throughput REST APIs, telemetry ingestion, role-based access control (RBAC), operational audit trailing, and dedicated game server fleet orchestration.
+A Node.js and TypeScript backend service engineered for live operations management, real-time telemetry aggregation, and dedicated game server fleet orchestration in multiplayer environments.
 
 ---
 
-## 🏛️ Architecture & Tech Stack
+## Architecture Overview
 
-- **Runtime**: Node.js & TypeScript
-- **Framework**: Express 4 with security middleware (`helmet`, `cors`, `morgan`)
+The system separates live operations into two distinct architectural domains:
+
+1. **Content & Live Operations Management**: Schedules, promotional campaigns, patch release pipelines, shop rotations, and player-facing issue triage.
+2. **Game Server Fleet Infrastructure**: Infrastructure-level monitoring, telemetry ingestion (CCU, simulation tick rate, round-trip latency, hardware utilization), and administrative controls (traffic draining, maintenance lockout, node decommissioning).
+
+### Technology Stack
+
+- **Runtime**: Node.js 20+ / TypeScript 5
+- **HTTP Framework**: Express 4 with security middleware (`helmet`, `cors`, `morgan`)
 - **Database**: MongoDB with Mongoose ODM
-- **Validation**: Zod schema validation middleware
-- **Authentication**: JWT authentication with 30-day persistent sessions & RBAC (`admin`, `liveops_editor`, `readonly_viewer`)
-- **Documentation**: Interactive OpenAPI 3.0 / Swagger UI at `/api/docs`
-- **Testing**: Vitest test runner with Supertest (27 automated tests)
+- **Schema Validation**: Zod
+- **Authentication**: Stateless JSON Web Tokens (JWT) with persistent cookie support and Role-Based Access Control (RBAC)
+- **API Documentation**: OpenAPI 3.0 via Swagger UI (`/api/docs`)
+- **Test Runner**: Vitest with Supertest
 
 ---
 
-## 📂 Subsystems & API Namespaces
+## API Endpoints & Subsystems
 
-| Namespace | Subsystem Description | RBAC Rules |
-| :--- | :--- | :--- |
-| `/api/v1/auth` | Operator authentication, Master Key bootstrap, staff account provisioning | Public / Admin |
-| `/api/v1/events` | Live game events, scheduling, drop-rate multipliers, segment targeting | Read: Staff / Write: Editor, Admin |
-| `/api/v1/patches` | Patch notes versioning, maintenance windows, build numbers, diff history | Read: Staff / Write: Editor, Admin |
-| `/api/v1/shop-rotations` | Dynamic store catalog, flash sales, featured items, batch rotations | Read: Staff / Write: Editor, Admin |
-| `/api/v1/issues` | Critical blocker incidents (P0), investigation pipeline, internal staff notes | Read: Staff / Write: Staff |
-| `/api/v1/timeline` | Synchronized multi-track operational schedule across events, patches, sales | Read: Staff |
-| `/api/v1/servers` | Dedicated game server fleet management, CCU, tick rate, latency, SRE controls | Read: Staff / Write: Admin |
-| `/api/v1/system` | Operational metrics, system health, and immutable operator audit trail | Read: Staff |
+| Endpoint Namespace | Subsystem | Supported Operations | Access Control |
+| :--- | :--- | :--- | :--- |
+| `/api/v1/auth` | Authentication & Operator Management | Login, session inspection, master key bootstrap, user CRUD | Public / Admin |
+| `/api/v1/events` | Game Event Operations | Event lifecycle, scheduling, loot multipliers, segment targeting | Editor, Admin |
+| `/api/v1/patches` | Patch Notes & Build Deployment | Versioning, maintenance duration, build numbers, diff audits | Editor, Admin |
+| `/api/v1/shop-rotations` | Economy & Shop Rotations | Catalog scheduling, flash sales, discount overrides, inventory caps | Editor, Admin |
+| `/api/v1/issues` | Incident Triage & Blockers | P0 critical issue tracking, cluster impact, internal notes | Staff |
+| `/api/v1/timeline` | Synchronized Schedule Matrix | Aggregated timeline stream across events, deployments, and sales | Staff |
+| `/api/v1/servers` | Server Fleet Telemetry | Node metrics (CCU, tick rate, ping), reboot, player traffic draining | Read: Staff / Write: Admin |
+| `/api/v1/system` | System Health & Audit Trail | Telemetry stats, cluster health checks, immutable audit logging | Staff |
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
-### 1. Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **MongoDB**: Local MongoDB instance or MongoDB Atlas cluster
+### Prerequisites
 
-### 2. Environment Setup
-Copy the `.env.example` file to `.env`:
-```bash
-cp .env.example .env
-```
+- Node.js (v18.0.0 or higher)
+- npm (v9.0.0 or higher)
+- MongoDB instance (local or MongoDB Atlas)
 
-Configure your environment variables in `.env`:
+### Environment Configuration
+
+Create a `.env` file in the root of the server directory based on `.env.example`:
+
 ```env
+NODE_ENV=development
 PORT=4000
 MONGODB_URI=mongodb://127.0.0.1:27017/live_ops_console
-JWT_SECRET=your_secret_jwt_key_here
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRES_IN=30d
 ROOT_ADMIN_KEY=AetheriaRootSecret2026!
 CLIENT_ORIGIN=http://localhost:3000
+ENABLE_MEMORY_DB_FALLBACK=true
 ```
 
-### 3. Installation
+### Installation
+
 ```bash
 npm install
 ```
 
-### 4. Running the Server
+### Running the Application
+
 ```bash
-# Start development server with hot-reload
+# Start development server with automatic restart on file change
 npm run dev
 
-# Build for production
+# Build TypeScript to production JavaScript
 npm run build
 
-# Start production server
+# Run production build
 npm start
 ```
 
-### 5. Running Database Scripts
+### Database Management
+
 ```bash
-# Seed realistic production dataset
+# Populate database with realistic seed data
 npm run seed
 
-# Wipe database to a clean zero-data state
+# Wipe all database collections to an empty state
 npm run clean
 ```
 
-### 6. Automated Testing
+### Running Tests
+
+The test suite validates authentication guards, RBAC enforcement, schema validations, and fleet state transitions.
+
 ```bash
-# Run Vitest test suite
 npm run test
 ```
 
 ---
 
-## 📖 API Documentation & Swagger UI
+## API Documentation
 
-Once the server is running, explore and test all endpoints interactively via Swagger UI:
-- **Swagger Documentation**: [http://localhost:4000/api/docs](http://localhost:4000/api/docs)
-- **Health Check Endpoint**: [http://localhost:4000/api/health](http://localhost:4000/api/health)
+When the server is running, the interactive OpenAPI / Swagger interface is accessible at:
+- Documentation: `http://localhost:4000/api/docs`
+- Health check: `http://localhost:4000/api/health`
