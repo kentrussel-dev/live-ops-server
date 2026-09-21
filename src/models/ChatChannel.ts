@@ -5,6 +5,7 @@ export interface IChatChannelDocument extends Document {
   slug: string;
   description?: string;
   isDirectMessage: boolean;
+  color?: string;
   members: Types.ObjectId[];
   createdBy: string;
   createdAt: Date;
@@ -30,6 +31,10 @@ const chatChannelSchema = new Schema<IChatChannelDocument>(
     isDirectMessage: {
       type: Boolean,
       default: false,
+    },
+    color: {
+      type: String,
+      default: '',
     },
     members: [
       {

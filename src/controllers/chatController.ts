@@ -75,8 +75,18 @@ export async function getChannels(req: Request, res: Response, next: NextFunctio
 
           const lastMessage = await ChatMessage.findOne({ channelId: c._id }).sort({ createdAt: -1 });
 
+          const channelObj = c.toObject();
+          if (!channelObj.color && !channelObj.isDirectMessage) {
+            const channelPalette = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2', '#4F46E5', '#DB2777', '#0D9488', '#EA580C'];
+            let hash = 0;
+            for (let i = 0; i < c.name.length; i++) {
+              hash = (hash << 5) - hash + c.name.charCodeAt(i);
+            }
+            channelObj.color = channelPalette[Math.abs(hash) % channelPalette.length];
+          }
+
           return {
-            ...c.toObject(),
+            ...channelObj,
             dmTargetUser,
             lastMessage: lastMessage
               ? {
@@ -104,11 +114,19 @@ export async function createChannel(req: Request, res: Response, next: NextFunct
     const { name, description, isDirectMessage, members } = req.body;
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
+    const channelPalette = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2', '#4F46E5', '#DB2777', '#0D9488', '#EA580C'];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = (hash << 5) - hash + name.charCodeAt(i);
+    }
+    const color = channelPalette[Math.abs(hash) % channelPalette.length];
+
     const channel = await ChatChannel.create({
       name,
       slug,
       description: description || '',
       isDirectMessage: isDirectMessage || false,
+      color,
       members: members || [req.user?.userId],
       createdBy: req.user?.username || 'root_admin',
     });
@@ -266,6 +284,7 @@ export async function sendMessage(req: Request, res: Response, next: NextFunctio
         _id: userId,
         username: req.user?.username || 'Operator',
         avatarUrl: fullUser?.avatarUrl || '',
+        avatarColor: fullUser?.avatarColor || '',
         role: req.user?.role || 'liveops_editor',
         department: req.user?.department || fullUser?.department || 'Operations',
       },

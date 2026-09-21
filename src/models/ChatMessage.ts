@@ -7,6 +7,7 @@ export interface IChatMessageDocument extends Document {
     _id: Types.ObjectId;
     username: string;
     avatarUrl?: string;
+    avatarColor?: string;
     role: UserRole;
     department?: string;
   };
@@ -50,6 +51,7 @@ const chatMessageSchema = new Schema<IChatMessageDocument>(
       _id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
       username: { type: String, required: true },
       avatarUrl: { type: String },
+      avatarColor: { type: String },
       role: { type: String, enum: ['admin', 'liveops_editor', 'readonly_viewer', 'developer'], required: true },
       department: { type: String },
     },

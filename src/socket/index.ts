@@ -157,6 +157,7 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
               _id: user.userId,
               username: user.username,
               avatarUrl: fullUser?.avatarUrl || '',
+              avatarColor: fullUser?.avatarColor || '',
               role: user.role,
               department: user.department || fullUser?.department || 'Operations',
             },

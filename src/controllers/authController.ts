@@ -224,6 +224,16 @@ export async function getCurrentUser(req: Request, res: Response, next: NextFunc
       return;
     }
 
+    if (!user.avatarColor) {
+      const palette = ['#4F46E5', '#7C3AED', '#DB2777', '#EA580C', '#16A34A', '#0891B2', '#DC2626', '#9333EA', '#B45309', '#0D9488', '#2563EB', '#059669'];
+      let hash = 0;
+      for (let i = 0; i < user.username.length; i++) {
+        hash = (hash << 5) - hash + user.username.charCodeAt(i);
+      }
+      user.avatarColor = palette[Math.abs(hash) % palette.length];
+      await user.save();
+    }
+
     res.json({
       success: true,
       data: {
@@ -238,6 +248,19 @@ export async function getCurrentUser(req: Request, res: Response, next: NextFunc
 export async function getUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const users = await User.find().select('-passwordHash').sort({ createdAt: -1 });
+
+    const palette = ['#4F46E5', '#7C3AED', '#DB2777', '#EA580C', '#16A34A', '#0891B2', '#DC2626', '#9333EA', '#B45309', '#0D9488', '#2563EB', '#059669'];
+    for (const u of users) {
+      if (!u.avatarColor) {
+        let hash = 0;
+        for (let i = 0; i < u.username.length; i++) {
+          hash = (hash << 5) - hash + u.username.charCodeAt(i);
+        }
+        u.avatarColor = palette[Math.abs(hash) % palette.length];
+        await u.save();
+      }
+    }
+
     res.json({
       success: true,
       data: {
