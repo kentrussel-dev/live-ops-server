@@ -13,6 +13,7 @@ export interface IUserDocument extends Document {
   bio?: string;
   statusMessage?: string;
   avatarUrl?: string;
+  avatarColor?: string;
   lastLoginAt?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
   createdAt: Date;
@@ -67,6 +68,10 @@ const userSchema = new Schema<IUserDocument>(
       default: 'On Duty • Operational',
     },
     avatarUrl: {
+      type: String,
+      default: '',
+    },
+    avatarColor: {
       type: String,
       default: '',
     },

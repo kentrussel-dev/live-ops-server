@@ -65,6 +65,13 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     }
 
     user.lastLoginAt = new Date();
+
+    // Auto-generate a persistent avatar color if not already set
+    if (!user.avatarColor) {
+      const palette = ['#4F46E5', '#7C3AED', '#DB2777', '#EA580C', '#16A34A', '#0891B2', '#DC2626', '#9333EA', '#B45309', '#0D9488'];
+      user.avatarColor = palette[user.username.charCodeAt(0) % palette.length];
+    }
+
     await user.save();
 
     const payload = {
@@ -100,6 +107,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
           role: user.role,
           department: user.department,
           avatarUrl: user.avatarUrl,
+          avatarColor: user.avatarColor,
           lastLoginAt: user.lastLoginAt,
         },
       },
@@ -133,15 +141,22 @@ export async function bootstrapWithMasterKey(req: Request, res: Response, next: 
       user.passwordHash = passwordHash;
       user.role = 'admin';
       user.department = 'Studio Leadership';
+      if (!user.avatarColor) {
+        const palette = ['#4F46E5', '#7C3AED', '#DB2777', '#EA580C', '#16A34A', '#0891B2', '#DC2626', '#9333EA', '#B45309', '#0D9488'];
+        user.avatarColor = palette[user.username.charCodeAt(0) % palette.length];
+      }
       user.lastLoginAt = new Date();
       await user.save();
     } else {
+      const palette = ['#4F46E5', '#7C3AED', '#DB2777', '#EA580C', '#16A34A', '#0891B2', '#DC2626', '#9333EA', '#B45309', '#0D9488'];
+      const avatarColor = palette[username.charCodeAt(0) % palette.length];
       user = new User({
         username,
         email: email.toLowerCase(),
         passwordHash,
         role: 'admin',
         department: 'Studio Leadership',
+        avatarColor,
         lastLoginAt: new Date(),
       });
       await user.save();
@@ -180,6 +195,7 @@ export async function bootstrapWithMasterKey(req: Request, res: Response, next: 
           role: user.role,
           department: user.department,
           avatarUrl: user.avatarUrl,
+          avatarColor: user.avatarColor,
           lastLoginAt: user.lastLoginAt,
         },
       },
@@ -316,12 +332,16 @@ export async function createUser(req: Request, res: Response, next: NextFunction
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    const palette = ['#4F46E5', '#7C3AED', '#DB2777', '#EA580C', '#16A34A', '#0891B2', '#DC2626', '#9333EA', '#B45309', '#0D9488'];
+    const avatarColor = palette[username.charCodeAt(0) % palette.length];
+
     const newUser = new User({
       username,
       email: email.toLowerCase(),
       passwordHash,
       role,
       department,
+      avatarColor,
       lastLoginAt: new Date(),
     });
 
@@ -347,6 +367,7 @@ export async function createUser(req: Request, res: Response, next: NextFunction
           role: newUser.role,
           department: newUser.department,
           avatarUrl: newUser.avatarUrl,
+          avatarColor: newUser.avatarColor,
           createdAt: newUser.createdAt,
         },
       },

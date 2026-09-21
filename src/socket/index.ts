@@ -172,7 +172,7 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
           // Broadcast to channel room
           io?.to(`channel:${channelId}`).emit('chat:new_message', message);
 
-          // If this is a DM, send notification to recipient
+          // If this is a DM, notify recipient and emit DM channel event so sidebar auto-populates without refresh
           if (recipientId && recipientId !== user.userId) {
             const notif = await Notification.create({
               recipientId,
@@ -190,6 +190,35 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
             });
 
             io?.to(`user:${recipientId}`).emit('notification:new', notif);
+
+            // Also emit chat:new_message directly to recipient's personal room in case they haven't joined the channel room yet
+            io?.to(`user:${recipientId}`).emit('chat:new_message', message);
+
+            // Emit DM channel metadata to recipient so their sidebar list gets the channel automatically without refresh
+            try {
+              const channelDoc = await ChatChannel.findById(channelId);
+              if (channelDoc) {
+                const enrichedChannelForRecipient = {
+                  ...channelDoc.toObject(),
+                  dmTargetUser: {
+                    _id: user.userId,
+                    username: user.username,
+                    avatarUrl: fullUser?.avatarUrl || '',
+                    avatarColor: fullUser?.avatarColor || '',
+                    role: user.role,
+                    department: user.department || fullUser?.department || 'Live Operations',
+                  },
+                  lastMessage: {
+                    content: message.content,
+                    senderName: user.username,
+                    createdAt: message.createdAt,
+                  },
+                };
+                io?.to(`user:${recipientId}`).emit('chat:dm_channel_created', enrichedChannelForRecipient);
+              }
+            } catch (dmErr) {
+              console.error('[Socket DM Channel Emit Error]:', dmErr);
+            }
           }
 
           if (callback) callback({ success: true, data: message });

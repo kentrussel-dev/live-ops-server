@@ -70,7 +70,7 @@ export async function getChannels(req: Request, res: Response, next: NextFunctio
           if (c.isDirectMessage && c.members.length > 0) {
             const otherUserId = c.members.find((m) => m.toString() !== userId?.toString());
             if (!otherUserId) return null; // Skip self DMs
-            dmTargetUser = await User.findById(otherUserId).select('_id username avatarUrl role department');
+            dmTargetUser = await User.findById(otherUserId).select('_id username avatarUrl avatarColor role department');
           }
 
           const lastMessage = await ChatMessage.findOne({ channelId: c._id }).sort({ createdAt: -1 });
@@ -197,7 +197,7 @@ export async function getOrCreateDM(req: Request, res: Response, next: NextFunct
       return;
     }
 
-    const targetUser = await User.findById(targetUserId).select('_id username avatarUrl role department');
+    const targetUser = await User.findById(targetUserId).select('_id username avatarUrl avatarColor role department');
     if (!targetUser) {
       res.status(404).json({ success: false, error: { message: 'Target user not found' } });
       return;
