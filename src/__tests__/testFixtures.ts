@@ -11,8 +11,17 @@ import { Notification } from '../models/Notification';
 import { AuditLog } from '../models/AuditLog';
 
 import { Project } from '../models/Project';
+import { ENV } from '../config/env';
 
 export async function setupTestFixtures() {
+  if (
+    process.env.NODE_ENV === 'production' ||
+    ENV.MONGODB_URI.includes('mafia-db') ||
+    ENV.MONGODB_URI.includes('mongodb+srv')
+  ) {
+    throw new Error('SAFETY VIOLATION: Refusing to wipe or run test fixtures against production/Atlas database!');
+  }
+
   await Promise.all([
     User.deleteMany({}),
     GameServer.deleteMany({}),
