@@ -75,6 +75,13 @@ export async function getChannels(req: Request, res: Response, next: NextFunctio
 
           const lastMessage = await ChatMessage.findOne({ channelId: c._id }).sort({ createdAt: -1 });
 
+          // Unread count: messages sent by someone else that have not been seen by this user
+          const unreadCount = await ChatMessage.countDocuments({
+            channelId: c._id,
+            'sender._id': { $ne: userId },
+            'seenBy.userId': { $ne: userId },
+          });
+
           const channelObj = c.toObject();
           if (!channelObj.color && !channelObj.isDirectMessage) {
             const channelPalette = ['#2563EB', '#7C3AED', '#059669', '#D97706', '#DC2626', '#0891B2', '#4F46E5', '#DB2777', '#0D9488', '#EA580C'];
@@ -88,6 +95,7 @@ export async function getChannels(req: Request, res: Response, next: NextFunctio
           return {
             ...channelObj,
             dmTargetUser,
+            unreadCount,
             lastMessage: lastMessage
               ? {
                   content: lastMessage.content,
