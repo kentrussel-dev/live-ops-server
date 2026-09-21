@@ -273,8 +273,44 @@ export async function getMessages(req: Request, res: Response, next: NextFunctio
 export async function sendMessage(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { channelId } = req.params;
-    const { content, recipientId, attachments, replyTo } = req.body;
+    const { content, attachments, replyTo } = req.body;
+    let { recipientId } = req.body;
     const userId = req.user?.userId;
+    const currentUserId = userId?.toString();
+    const currentUsername = req.user?.username;
+    const isAdmin = req.user?.role === 'admin';
+
+    const channelDoc = await ChatChannel.findById(channelId);
+    if (!channelDoc) {
+      res.status(404).json({ success: false, error: { message: 'Channel not found' } });
+      return;
+    }
+
+    // Check membership on standard channels if members are specified
+    if (!channelDoc.isDirectMessage && channelDoc.members && channelDoc.members.length > 0) {
+      const isMember = channelDoc.members.some((m: any) => m?.toString() === currentUserId);
+      const isCreator = channelDoc.createdBy === currentUsername || channelDoc.createdBy === currentUserId;
+      if (!isMember && !isCreator && !isAdmin) {
+        res.status(403).json({ success: false, error: { message: 'You are not a member of this channel.' } });
+        return;
+      }
+    }
+
+    // Check membership on direct message channels
+    if (channelDoc.isDirectMessage) {
+      const isDmMember = channelDoc.members && channelDoc.members.some((m: any) => m?.toString() === currentUserId);
+      if (!isDmMember && !isAdmin) {
+        res.status(403).json({ success: false, error: { message: 'You are not a member of this direct message.' } });
+        return;
+      }
+      // Auto-resolve recipientId if not provided
+      if (!recipientId && channelDoc.members && channelDoc.members.length > 0) {
+        const otherMember = channelDoc.members.find((m: any) => m?.toString() !== currentUserId);
+        if (otherMember) {
+          recipientId = otherMember.toString();
+        }
+      }
+    }
 
     const fullUser = await User.findById(userId);
 
@@ -315,6 +351,29 @@ export async function sendMessage(req: Request, res: Response, next: NextFunctio
       });
 
       io?.to(`user:${recipientId}`).emit('notification:new', notif);
+      io?.to(`user:${recipientId}`).emit('chat:new_message', message);
+
+      try {
+        const enrichedChannelForRecipient = {
+          ...channelDoc.toObject(),
+          dmTargetUser: {
+            _id: userId,
+            username: req.user?.username || 'Operator',
+            avatarUrl: fullUser?.avatarUrl || '',
+            avatarColor: fullUser?.avatarColor || '',
+            role: req.user?.role || 'liveops_editor',
+            department: req.user?.department || fullUser?.department || 'Live Operations',
+          },
+          lastMessage: {
+            content: message.content,
+            senderName: req.user?.username || 'Operator',
+            createdAt: message.createdAt,
+          },
+        };
+        io?.to(`user:${recipientId}`).emit('chat:dm_channel_created', enrichedChannelForRecipient);
+      } catch (dmErr) {
+        console.error('[REST DM Channel Emit Error]:', dmErr);
+      }
     }
 
     res.status(201).json({

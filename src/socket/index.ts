@@ -143,10 +143,47 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
         callback?: (res: any) => void
       ) => {
         try {
-          const { channelId, content, recipientId, attachments, replyTo } = payload;
+          const { channelId, content, attachments, replyTo } = payload;
+          let { recipientId } = payload;
           if (!content?.trim() && (!attachments || attachments.length === 0)) {
             if (callback) callback({ success: false, error: 'Message content or attachment required' });
             return;
+          }
+
+          const channelDoc = await ChatChannel.findById(channelId);
+          if (!channelDoc) {
+            if (callback) callback({ success: false, error: 'Channel not found' });
+            return;
+          }
+
+          const currentUserId = user.userId?.toString();
+          const currentUsername = user.username;
+          const isAdmin = user.role === 'admin';
+
+          // If standard channel has members configured, only members (or creator / admin) can chat
+          if (!channelDoc.isDirectMessage && channelDoc.members && channelDoc.members.length > 0) {
+            const isMember = channelDoc.members.some((m: any) => m?.toString() === currentUserId);
+            const isCreator = channelDoc.createdBy === currentUsername || channelDoc.createdBy === currentUserId;
+            if (!isMember && !isCreator && !isAdmin) {
+              if (callback) callback({ success: false, error: 'You are not a member of this channel.' });
+              return;
+            }
+          }
+
+          // If DM, ensure current user is part of the DM
+          if (channelDoc.isDirectMessage) {
+            const isDmMember = channelDoc.members && channelDoc.members.some((m: any) => m?.toString() === currentUserId);
+            if (!isDmMember && !isAdmin) {
+              if (callback) callback({ success: false, error: 'You are not a member of this direct message.' });
+              return;
+            }
+            // Auto-resolve recipientId if not provided by client
+            if (!recipientId && channelDoc.members && channelDoc.members.length > 0) {
+              const otherMember = channelDoc.members.find((m: any) => m?.toString() !== currentUserId);
+              if (otherMember) {
+                recipientId = otherMember.toString();
+              }
+            }
           }
 
           const fullUser = await User.findById(user.userId);
@@ -197,26 +234,23 @@ export function initSocketIO(httpServer: HttpServer): SocketIOServer {
 
             // Emit DM channel metadata to recipient so their sidebar list gets the channel automatically without refresh
             try {
-              const channelDoc = await ChatChannel.findById(channelId);
-              if (channelDoc) {
-                const enrichedChannelForRecipient = {
-                  ...channelDoc.toObject(),
-                  dmTargetUser: {
-                    _id: user.userId,
-                    username: user.username,
-                    avatarUrl: fullUser?.avatarUrl || '',
-                    avatarColor: fullUser?.avatarColor || '',
-                    role: user.role,
-                    department: user.department || fullUser?.department || 'Live Operations',
-                  },
-                  lastMessage: {
-                    content: message.content,
-                    senderName: user.username,
-                    createdAt: message.createdAt,
-                  },
-                };
-                io?.to(`user:${recipientId}`).emit('chat:dm_channel_created', enrichedChannelForRecipient);
-              }
+              const enrichedChannelForRecipient = {
+                ...channelDoc.toObject(),
+                dmTargetUser: {
+                  _id: user.userId,
+                  username: user.username,
+                  avatarUrl: fullUser?.avatarUrl || '',
+                  avatarColor: fullUser?.avatarColor || '',
+                  role: user.role,
+                  department: user.department || fullUser?.department || 'Live Operations',
+                },
+                lastMessage: {
+                  content: message.content,
+                  senderName: user.username,
+                  createdAt: message.createdAt,
+                },
+              };
+              io?.to(`user:${recipientId}`).emit('chat:dm_channel_created', enrichedChannelForRecipient);
             } catch (dmErr) {
               console.error('[Socket DM Channel Emit Error]:', dmErr);
             }
