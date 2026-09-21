@@ -1,5 +1,5 @@
 import { Schema, model, Document } from 'mongoose';
-import { ItemCategory, ItemRarity, RotationStatus, CurrencyType } from '../../shared/types';
+import { ShopItemCategory as ItemCategory, ItemRarity, RotationStatus } from '../../shared/types';
 
 export interface IShopItemRotationDocument extends Document {
   itemId: string;
@@ -9,7 +9,7 @@ export interface IShopItemRotationDocument extends Document {
   rarity: ItemRarity;
   pricing: {
     basePrice: number;
-    currency: CurrencyType;
+    currency: string;
     discountPct: number;
     salePrice: number;
   };
@@ -72,8 +72,8 @@ const shopItemRotationSchema = new Schema<IShopItemRotationDocument>(
     },
     rotationStatus: {
       type: String,
-      enum: ['featured', 'standard', 'flash_sale', 'retired', 'vaulted'],
-      default: 'standard',
+      enum: ['draft', 'scheduled', 'active', 'featured', 'flash_sale', 'expired'],
+      default: 'draft',
       required: true,
     },
     schedule: {
