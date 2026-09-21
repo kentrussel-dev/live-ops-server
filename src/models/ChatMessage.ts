@@ -50,7 +50,7 @@ const chatMessageSchema = new Schema<IChatMessageDocument>(
       _id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
       username: { type: String, required: true },
       avatarUrl: { type: String },
-      role: { type: String, enum: ['admin', 'liveops_editor', 'readonly_viewer'], required: true },
+      role: { type: String, enum: ['admin', 'liveops_editor', 'readonly_viewer', 'developer'], required: true },
       department: { type: String },
     },
     recipientId: {
