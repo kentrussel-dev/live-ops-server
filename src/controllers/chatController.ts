@@ -15,6 +15,14 @@ export const createChannelSchema = z.object({
   }),
 });
 
+export const updateChannelSchema = z.object({
+  body: z.object({
+    name: z.string().min(2).max(50).optional(),
+    description: z.string().max(200).optional(),
+    members: z.array(z.string()).optional(),
+  }),
+});
+
 export const sendMessageSchema = z.object({
   body: z.object({
     content: z.string().min(1),
@@ -109,6 +117,63 @@ export async function createChannel(req: Request, res: Response, next: NextFunct
     io?.emit('channel:created', channel);
 
     res.status(201).json({
+      success: true,
+      data: { channel },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateChannel(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { channelId } = req.params;
+    const { name, description, members } = req.body;
+    const channel = await ChatChannel.findById(channelId);
+
+    if (!channel) {
+      res.status(404).json({ success: false, error: { message: 'Channel not found' } });
+      return;
+    }
+
+    if (channel.isDirectMessage) {
+      res.status(400).json({ success: false, error: { message: 'Cannot edit direct message channels' } });
+      return;
+    }
+
+    const currentUsername = req.user?.username;
+    const currentUserId = req.user?.userId;
+    const isCreator =
+      channel.createdBy === currentUsername ||
+      channel.createdBy === currentUserId ||
+      (channel.members && channel.members.some((m) => m.toString() === currentUserId));
+    const isAdmin = req.user?.role === 'admin';
+
+    if (!isCreator && !isAdmin) {
+      res.status(403).json({
+        success: false,
+        error: { message: 'Only the channel creator or an administrator can edit this channel.' },
+      });
+      return;
+    }
+
+    if (name !== undefined && name.trim()) {
+      channel.name = name.trim();
+      channel.slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+    if (description !== undefined) {
+      channel.description = description.trim();
+    }
+    if (members !== undefined && Array.isArray(members)) {
+      channel.members = members as any;
+    }
+
+    await channel.save();
+
+    const io = getIO();
+    io?.emit('channel:updated', channel);
+
+    res.json({
       success: true,
       data: { channel },
     });

@@ -2,11 +2,13 @@ import { Router } from 'express';
 import {
   getChannels,
   createChannel,
+  updateChannel,
   getMessages,
   sendMessage,
   getOrCreateDM,
   toggleReaction,
   createChannelSchema,
+  updateChannelSchema,
   sendMessageSchema,
 } from '../controllers/chatController';
 import { authenticateToken } from '../middleware/auth';
@@ -18,6 +20,7 @@ chatRouter.use(authenticateToken);
 
 chatRouter.get('/channels', getChannels);
 chatRouter.post('/channels', validateSchema(createChannelSchema), createChannel);
+chatRouter.patch('/channels/:channelId', validateSchema(updateChannelSchema), updateChannel);
 chatRouter.get('/dm/:targetUserId', getOrCreateDM);
 chatRouter.get('/channels/:channelId/messages', getMessages);
 chatRouter.post('/channels/:channelId/messages', validateSchema(sendMessageSchema), sendMessage);
