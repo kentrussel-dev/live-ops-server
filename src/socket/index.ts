@@ -13,7 +13,7 @@ const onlineUsers = new Map<string, { socketId: string; username: string; role: 
 export function initSocketIO(httpServer: HttpServer): SocketIOServer {
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: '*',
+      origin: ENV.CLIENT_ORIGIN,
       methods: ['GET', 'POST'],
       credentials: true,
     },
