@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../app';
 import { connectDB } from '../config/db';
-import { seedDatabase } from '../seeds/seed';
+import { setupTestFixtures } from './testFixtures';
 import { IssueTicket } from '../models/IssueTicket';
 import { Notification } from '../models/Notification';
 import { User } from '../models/User';
@@ -14,7 +14,7 @@ let sampleIssue: any = null;
 
 beforeAll(async () => {
   await connectDB();
-  await seedDatabase();
+  await setupTestFixtures();
 
   const loginRes = await request(app)
     .post('/api/v1/auth/login')

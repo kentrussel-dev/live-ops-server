@@ -7,6 +7,9 @@ import { ShopItemRotation } from '../models/ShopItemRotation';
 import { IssueTicket } from '../models/IssueTicket';
 import { AuditLog } from '../models/AuditLog';
 import { GameServer } from '../models/GameServer';
+import { ChatChannel } from '../models/ChatChannel';
+import { ChatMessage } from '../models/ChatMessage';
+import { Notification } from '../models/Notification';
 
 export async function clearAllData() {
   console.log('[CleanDB] Connecting to database to clear all collections...');
@@ -20,6 +23,9 @@ export async function clearAllData() {
     IssueTicket.deleteMany({}),
     AuditLog.deleteMany({}),
     GameServer.deleteMany({}),
+    ChatChannel.deleteMany({}),
+    ChatMessage.deleteMany({}),
+    Notification.deleteMany({}),
   ]);
 
   console.log('[CleanDB] Successfully cleared all database collections. Database is now 100% clean and empty.');

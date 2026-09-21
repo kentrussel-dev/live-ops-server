@@ -31,7 +31,7 @@ export const createUserSchema = z.object({
     username: z.string().min(3).max(30),
     email: z.string().email(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
-    role: z.enum(['admin', 'liveops_editor', 'readonly_viewer']),
+    role: z.enum(['admin', 'liveops_editor', 'readonly_viewer', 'developer']),
     department: z.string().min(1, 'Department is required'),
   }),
 });

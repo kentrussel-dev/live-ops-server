@@ -2,14 +2,14 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../app';
 import { connectDB, disconnectDB } from '../config/db';
-import { seedDatabase } from '../seeds/seed';
+import { setupTestFixtures } from './testFixtures';
 
 let app: any;
 let editorToken: string;
 
 beforeAll(async () => {
   await connectDB();
-  await seedDatabase();
+  await setupTestFixtures();
   app = createApp();
 
   const editorLogin = await request(app)

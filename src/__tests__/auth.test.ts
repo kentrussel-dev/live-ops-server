@@ -2,14 +2,14 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../app';
 import { connectDB, disconnectDB } from '../config/db';
-import { seedDatabase } from '../seeds/seed';
+import { setupTestFixtures } from './testFixtures';
 import { ENV } from '../config/env';
 
 let app: any;
 
 beforeAll(async () => {
   await connectDB();
-  await seedDatabase();
+  await setupTestFixtures();
   app = createApp();
 });
 

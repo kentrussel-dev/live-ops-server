@@ -8,6 +8,7 @@ export interface IIssueTicketDocument extends Document {
   category: IssueCategory;
   severity: IssueSeverity;
   status: IssueStatus;
+  projectId?: Schema.Types.ObjectId | string;
   affectedEventId?: string;
   affectedVersion?: string;
   affectedCluster?: ServerCluster;
@@ -60,9 +61,12 @@ const issueTicketSchema = new Schema<IIssueTicketDocument>(
     },
     status: {
       type: String,
-      enum: ['reported', 'investigating', 'fixed', 'verified', 'closed'],
-      default: 'reported',
+      default: 'todo',
       required: true,
+    },
+    projectId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Project',
     },
     affectedEventId: {
       type: String,

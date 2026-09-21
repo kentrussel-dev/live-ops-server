@@ -2,7 +2,7 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface IAuditLogDocument extends Document {
   action: string;
-  entityType: 'event' | 'patch' | 'shop' | 'issue' | 'system' | 'auth' | 'server';
+  entityType: 'event' | 'patch' | 'shop' | 'issue' | 'project' | 'system' | 'auth' | 'server';
   entityId?: string;
   performedBy: string;
   userRole: string;
@@ -20,7 +20,7 @@ const auditLogSchema = new Schema<IAuditLogDocument>(
     },
     entityType: {
       type: String,
-      enum: ['event', 'patch', 'shop', 'issue', 'system', 'auth', 'server'],
+      enum: ['event', 'patch', 'shop', 'issue', 'project', 'system', 'auth', 'server'],
       required: true,
     },
     entityId: {

@@ -28,24 +28,24 @@ issueRouter.get('/:id', getIssueById);
 issueRouter.post('/', validateSchema(createIssueSchema), createIssue);
 issueRouter.post('/:id/notes', validateSchema(addNoteSchema), addInternalNote);
 
-// Assignment, Status transitions and modifications require liveops_editor or admin
+// Assignment, Status transitions and modifications require developer, liveops_editor, readonly_viewer, or admin
 issueRouter.post(
   '/:id/assign',
-  requireRoles('liveops_editor', 'admin'),
+  requireRoles('developer', 'liveops_editor', 'readonly_viewer', 'admin'),
   validateSchema(assignIssueSchema),
   assignIssue
 );
 
 issueRouter.put(
   '/:id',
-  requireRoles('liveops_editor', 'admin'),
+  requireRoles('developer', 'liveops_editor', 'readonly_viewer', 'admin'),
   validateSchema(updateIssueSchema),
   updateIssue
 );
 
 issueRouter.patch(
   '/:id/status',
-  requireRoles('liveops_editor', 'admin'),
+  requireRoles('developer', 'liveops_editor', 'readonly_viewer', 'admin'),
   validateSchema(changeStatusSchema),
   changeIssueStatus
 );

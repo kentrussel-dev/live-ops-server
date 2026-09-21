@@ -7,7 +7,6 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "tsx src/seeds/seed.ts",
     "clean": "tsx src/scripts/cleanDb.ts",
     "test": "vitest run",
     "test:watch": "vitest"

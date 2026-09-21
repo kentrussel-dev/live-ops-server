@@ -1,4 +1,22 @@
-export type UserRole = 'admin' | 'liveops_editor' | 'readonly_viewer';
+export type UserRole = 'admin' | 'liveops_editor' | 'readonly_viewer' | 'developer';
+
+export interface IKanbanColumn {
+  id: string;
+  name: string;
+  order: number;
+  color?: string;
+}
+
+export interface IProject {
+  _id: string;
+  name: string;
+  key: string;
+  description?: string;
+  columns: IKanbanColumn[];
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface IUser {
   _id: string;
@@ -6,10 +24,25 @@ export interface IUser {
   email: string;
   role: UserRole;
   department: string;
+  position?: string;
+  departmentDescription?: string;
+  bio?: string;
+  statusMessage?: string;
   avatarUrl?: string;
   lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface IOperatorProfile extends IUser {
+  assignedTickets?: any[];
+  metrics?: {
+    totalAssignedTickets: number;
+    openTickets: number;
+    resolvedTickets: number;
+    authoredPatchesCount: number;
+    createdEventsCount: number;
+  };
 }
 
 export type EventCategory = 'raid' | 'exp_boost' | 'community' | 'login_reward' | 'pvp_season' | 'world_boss' | 'maintenance';
@@ -88,21 +121,20 @@ export interface IPatchNote {
   updatedAt: string;
 }
 
-export type ItemCategory = 'weapon' | 'armor' | 'consumable' | 'cosmetic' | 'mount' | 'bundle' | 'currency';
+export type ShopItemCategory = 'weapon' | 'armor' | 'consumable' | 'cosmetic' | 'currency_bundle';
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
-export type RotationStatus = 'featured' | 'standard' | 'flash_sale' | 'retired' | 'vaulted';
-export type CurrencyType = 'gems' | 'gold' | 'valor_tokens' | 'rift_shards';
+export type RotationStatus = 'draft' | 'scheduled' | 'active' | 'featured' | 'flash_sale' | 'expired';
 
 export interface IShopItemRotation {
   _id: string;
   itemId: string;
   name: string;
   description: string;
-  category: ItemCategory;
+  category: ShopItemCategory;
   rarity: ItemRarity;
   pricing: {
     basePrice: number;
-    currency: CurrencyType;
+    currency: 'gold' | 'gems' | 'honor_tokens' | 'event_medals';
     discountPct: number;
     salePrice: number;
   };
@@ -110,14 +142,15 @@ export interface IShopItemRotation {
   schedule: {
     activeFrom: string;
     activeUntil: string;
-    stockLimitPerUser?: number;
-    globalStockRemaining?: number;
   };
-  previewAssets: {
-    iconTag: string;
-    modelPreviewTag?: string;
+  limits?: {
+    perPlayerCap?: number;
+    globalServerStock?: number;
+    currentPurchasesTotal?: number;
+  };
+  previewAssets?: {
+    iconTag?: string;
     hasParticleEffect?: boolean;
-    tierGlowHex?: string;
   };
   tags: string[];
   lastModifiedBy: string;
@@ -125,16 +158,24 @@ export interface IShopItemRotation {
   updatedAt: string;
 }
 
-export type IssueCategory = 'quest' | 'loot_table' | 'combat_balance' | 'client_crash' | 'shop_billing' | 'server_lag' | 'ui_glitch';
 export type IssueSeverity = 'critical_blocker' | 'major' | 'moderate' | 'minor';
-export type IssueStatus = 'reported' | 'investigating' | 'fixed' | 'verified' | 'closed';
+export type IssueStatus = 'todo' | 'doing' | 'develop' | 'testing' | 'done' | string;
+export type IssueCategory = 'quest' | 'loot_table' | 'combat_balance' | 'client_crash' | 'shop_billing' | 'server_lag' | 'ui_glitch';
 
 export interface IIssueInternalNote {
-  _id?: string;
   author: string;
   authorRole: string;
   note: string;
   timestamp: string;
+}
+
+export interface IIssueAssignee {
+  _id: string;
+  username: string;
+  email?: string;
+  avatarUrl?: string;
+  role?: string;
+  department?: string;
 }
 
 export interface IIssueTicket {
@@ -145,11 +186,13 @@ export interface IIssueTicket {
   category: IssueCategory;
   severity: IssueSeverity;
   status: IssueStatus;
+  projectId?: string;
   affectedEventId?: string;
   affectedVersion?: string;
+  clientBuild?: string;
   affectedCluster?: ServerCluster;
   reproductionSteps: string[];
-  assignedTo?: string;
+  assignedTo?: string | IIssueAssignee;
   reportedBy: string;
   internalNotes: IIssueInternalNote[];
   resolutionNotes?: string;
@@ -221,4 +264,90 @@ export interface IFleetSummary {
   utilizationPct: number;
   avgPingMs: number;
   avgTickRateHz: number;
+}
+
+// ==============================================================
+// DOMAIN 3: REAL-TIME DISCUSS, CHANNELS, DIRECT MESSAGES & INBOX
+// ==============================================================
+export interface IChatChannel {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  isDirectMessage: boolean;
+  members?: string[];
+  dmTargetUser?: IUser;
+  unreadCount?: number;
+  lastMessage?: {
+    content: string;
+    senderName: string;
+    createdAt: string;
+  };
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IChatAttachment {
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+}
+
+export interface IChatReaction {
+  reaction: string;
+  count: number;
+  users: string[];
+}
+
+export interface IChatMessageReply {
+  messageId: string;
+  senderName: string;
+  senderAvatarUrl?: string;
+  content: string;
+}
+
+export interface IChatMessage {
+  _id: string;
+  channelId: string;
+  sender: {
+    _id: string;
+    username: string;
+    avatarUrl?: string;
+    role: UserRole;
+    department?: string;
+  };
+  recipientId?: string;
+  content: string;
+  replyTo?: IChatMessageReply;
+  status?: 'delivered' | 'seen';
+  seenBy?: Array<{
+    userId: string;
+    username?: string;
+    seenAt: string;
+  }>;
+  attachments?: IChatAttachment[];
+  reactions?: IChatReaction[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NotificationType = 'ticket_assigned' | 'mention' | 'direct_message' | 'system_alert' | 'status_change';
+
+export interface INotification {
+  _id: string;
+  recipientId: string;
+  sender?: {
+    _id: string;
+    username: string;
+    avatarUrl?: string;
+  };
+  type: NotificationType;
+  title: string;
+  message: string;
+  entityType?: 'issue' | 'channel' | 'event' | 'server';
+  entityId?: string;
+  isRead: boolean;
+  createdAt: string;
 }

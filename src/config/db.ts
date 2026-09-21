@@ -1,6 +1,16 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
+import dns from 'dns';
 import { ENV } from './env';
+
+// Ensure cloud SRV records (Atlas) resolve properly across all cloud hosts / Windows dev networks
+if (ENV.MONGODB_URI.startsWith('mongodb+srv://')) {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch (e) {
+    // Ignore if not permitted
+  }
+}
 
 let mongoMemoryServer: MongoMemoryServer | null = null;
 
@@ -11,9 +21,9 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   try {
-    // Attempt connecting to the configured URI with a 2-second timeout
+    // Attempt connecting to the configured URI with a 10-second timeout
     await mongoose.connect(ENV.MONGODB_URI, {
-      serverSelectionTimeoutMS: 2000,
+      serverSelectionTimeoutMS: 10000,
     });
     console.log(`[Database] Connected to external MongoDB at ${ENV.MONGODB_URI}`);
     return mongoose;

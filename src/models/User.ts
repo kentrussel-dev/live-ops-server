@@ -42,7 +42,7 @@ const userSchema = new Schema<IUserDocument>(
     },
     role: {
       type: String,
-      enum: ['admin', 'liveops_editor', 'readonly_viewer'],
+      enum: ['admin', 'liveops_editor', 'readonly_viewer', 'developer'],
       default: 'readonly_viewer',
       required: true,
     },

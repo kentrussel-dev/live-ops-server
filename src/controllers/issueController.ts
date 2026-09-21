@@ -12,7 +12,8 @@ export const createIssueSchema = z.object({
     description: z.string().min(5),
     category: z.enum(['quest', 'loot_table', 'combat_balance', 'client_crash', 'shop_billing', 'server_lag', 'ui_glitch']),
     severity: z.enum(['critical_blocker', 'major', 'moderate', 'minor']).default('moderate'),
-    status: z.enum(['reported', 'investigating', 'fixed', 'verified', 'closed']).default('reported'),
+    status: z.string().default('todo'),
+    projectId: z.string().optional(),
     affectedEventId: z.string().optional(),
     affectedVersion: z.string().optional(),
     affectedCluster: z.enum(['NA-East', 'EU-Central', 'APAC-East', 'Global', 'Staging-Internal']).optional(),
@@ -29,7 +30,7 @@ export const updateIssueSchema = z.object({
 
 export const changeStatusSchema = z.object({
   body: z.object({
-    status: z.enum(['reported', 'investigating', 'fixed', 'verified', 'closed']),
+    status: z.string().min(1, 'Status is required'),
     note: z.string().optional(),
     resolutionNotes: z.string().optional(),
   }),
@@ -50,8 +51,12 @@ export const addNoteSchema = z.object({
 
 export async function getIssues(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { status, severity, category, search, affectedCluster, assignedTo } = req.query;
+    const { status, severity, category, search, affectedCluster, assignedTo, projectId } = req.query;
     const filter: Record<string, any> = {};
+
+    if (projectId) {
+      filter.projectId = projectId;
+    }
 
     if (status) {
       filter.status = { $in: String(status).split(',') };

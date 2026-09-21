@@ -2,17 +2,18 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../app';
 import { connectDB } from '../config/db';
-import { seedDatabase } from '../seeds/seed';
+import { setupTestFixtures } from './testFixtures';
 import { User } from '../models/User';
 
-const app = createApp();
+let app: any;
 let adminToken = '';
 let editorToken = '';
 let targetUser: any = null;
 
 beforeAll(async () => {
   await connectDB();
-  await seedDatabase();
+  await setupTestFixtures();
+  app = createApp();
 
   const loginRes = await request(app)
     .post('/api/v1/auth/login')
@@ -24,7 +25,7 @@ beforeAll(async () => {
     .send({ email: 'editor@liveops.aetheria.gg', password: 'AetheriaOps2026!' });
   editorToken = editorRes.body.data.token;
 
-  targetUser = await User.findOne({ username: 'Christian Roi S. Neri' });
+  targetUser = await User.findOne({ email: 'editor@liveops.aetheria.gg' });
 });
 
 describe('Discuss Hub, Channels & Real-Time Chat Endpoints', () => {
