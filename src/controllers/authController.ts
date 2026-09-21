@@ -444,3 +444,125 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
     next(err);
   }
 }
+
+export async function updateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user?.userId;
+    const { username, email, department, statusMessage, position } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'ERR_USER_NOT_FOUND', message: 'User not found.' },
+      });
+      return;
+    }
+
+    if (username && username !== user.username) {
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        res.status(409).json({
+          success: false,
+          error: { code: 'ERR_USERNAME_TAKEN', message: 'Username is already taken.' },
+        });
+        return;
+      }
+      user.username = username;
+    }
+
+    if (email && email.toLowerCase() !== user.email.toLowerCase()) {
+      const existingEmail = await User.findOne({ email: email.toLowerCase() });
+      if (existingEmail) {
+        res.status(409).json({
+          success: false,
+          error: { code: 'ERR_EMAIL_TAKEN', message: 'Email address is already in use.' },
+        });
+        return;
+      }
+      user.email = email.toLowerCase();
+    }
+
+    if (department !== undefined) {
+      user.department = department;
+    }
+
+    if (statusMessage !== undefined) {
+      user.statusMessage = statusMessage;
+    }
+
+    // Position only allowed for non-admin (Developer, QA, Artist)
+    if (position !== undefined && user.role !== 'admin') {
+      user.position = position;
+    }
+
+    await user.save();
+
+    const updatedUser = await User.findById(userId).select('-passwordHash');
+
+    res.json({
+      success: true,
+      data: {
+        user: updatedUser,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function changePassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const userId = req.user?.userId;
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'ERR_MISSING_FIELDS', message: 'Old password and new password are required.' },
+      });
+      return;
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'ERR_USER_NOT_FOUND', message: 'User not found.' },
+      });
+      return;
+    }
+
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'ERR_INVALID_PASSWORD', message: 'Current password does not match.' },
+      });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    await AuditLog.create({
+      action: 'PASSWORD_CHANGED',
+      entityType: 'auth',
+      entityId: user._id.toString(),
+      performedBy: user.username,
+      userRole: user.role,
+      details: `Password changed for operator account ${user.username}.`,
+      ipAddress: req.ip,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        message: 'Password updated successfully.',
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}

@@ -8,6 +8,8 @@ import {
   getUsers,
   createUser,
   deleteUser,
+  updateProfile,
+  changePassword,
   loginSchema,
   masterKeySchema,
   createUserSchema,
@@ -32,6 +34,8 @@ export const authRouter = Router();
 authRouter.post('/login', authLimiter, validateSchema(loginSchema), login);
 authRouter.post('/master-bootstrap', authLimiter, validateSchema(masterKeySchema), bootstrapWithMasterKey);
 authRouter.get('/me', authenticateToken, getCurrentUser);
+authRouter.patch('/profile', authenticateToken, updateProfile);
+authRouter.post('/change-password', authenticateToken, changePassword);
 authRouter.get('/profile/:id', authenticateToken, getUserProfile);
 
 // Operator Directory (All authenticated staff) & Admin Management
