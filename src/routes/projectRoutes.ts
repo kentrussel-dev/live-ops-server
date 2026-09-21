@@ -4,9 +4,11 @@ import {
   getProjectById,
   createProject,
   updateProjectColumns,
+  addProjectCategory,
   deleteProject,
   createProjectSchema,
   updateProjectColumnsSchema,
+  addProjectCategorySchema,
 } from '../controllers/projectController';
 import { authenticateToken, requireRoles } from '../middleware/auth';
 import { validateSchema } from '../middleware/validate';
@@ -35,6 +37,14 @@ projectRouter.patch(
   requireRoles('developer', 'readonly_viewer', 'admin'),
   validateSchema(updateProjectColumnsSchema),
   updateProjectColumns
+);
+
+// Add custom category: developer, readonly_viewer (QA), liveops_editor, admin
+projectRouter.post(
+  '/:id/categories',
+  requireRoles('developer', 'readonly_viewer', 'liveops_editor', 'admin'),
+  validateSchema(addProjectCategorySchema),
+  addProjectCategory
 );
 
 // Delete project: admin only

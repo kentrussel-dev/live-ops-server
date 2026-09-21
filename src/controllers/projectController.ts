@@ -35,6 +35,12 @@ export const updateProjectColumnsSchema = z.object({
   }),
 });
 
+export const addProjectCategorySchema = z.object({
+  body: z.object({
+    category: z.string().min(1, 'Category name is required').trim(),
+  }),
+});
+
 export async function getProjects(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const projects = await Project.find().sort({ createdAt: -1 });
@@ -157,6 +163,48 @@ export async function updateProjectColumns(req: Request, res: Response, next: Ne
       userRole: req.user?.role || 'developer',
       details: `Updated Kanban columns for project [${project.key}]`,
     });
+
+    res.json({
+      success: true,
+      data: { project },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function addProjectCategory(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { category } = req.body;
+
+    const project = await Project.findById(id);
+    if (!project) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'ERR_PROJECT_NOT_FOUND', message: 'Project not found.' },
+      });
+      return;
+    }
+
+    if (!project.categories) {
+      project.categories = ['Feature', 'Bug', 'Task', 'Quest', 'Improvement'];
+    }
+
+    const trimmed = category.trim();
+    if (!project.categories.includes(trimmed)) {
+      project.categories.push(trimmed);
+      await project.save();
+
+      await AuditLog.create({
+        action: 'PROJECT_CATEGORY_ADDED',
+        entityType: 'project',
+        entityId: project._id.toString(),
+        performedBy: req.user?.username || 'system',
+        userRole: req.user?.role || 'developer',
+        details: `Added category "${trimmed}" to project [${project.key}]`,
+      });
+    }
 
     res.json({
       success: true,

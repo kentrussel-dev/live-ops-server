@@ -187,7 +187,7 @@ export async function setupTestFixtures() {
     title: 'Quest item drop counter stuck at 90% in Zone 4',
     description: 'Defeating mobs stops crediting quest shards past 9/10 items on high-latency client connections.',
     category: 'quest',
-    severity: 'critical_blocker',
+    severity: 'most_important',
     status: 'investigating',
     affectedCluster: 'Global',
     reproductionSteps: ['1. Accept quest in Zone 4', '2. Defeat 9 Void Stalkers'],

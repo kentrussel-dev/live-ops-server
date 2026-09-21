@@ -67,7 +67,7 @@ describe('Projects & Dynamic Kanban Board API', () => {
         title: 'Fix combo multiplier reset timing in dual dagger stance',
         description: 'Window for secondary combo input expires 200ms prematurely.',
         category: 'combat_balance',
-        severity: 'major',
+        severity: 'very_high',
         status: 'develop',
         projectId: createdProjectId,
         reproductionSteps: ['Equip daggers', 'Perform attack 1 then attack 2'],

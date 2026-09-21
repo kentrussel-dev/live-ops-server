@@ -49,7 +49,7 @@ describe('Known Issues Pipeline API', () => {
         title: 'UI Clipping on iPhone 15 Dynamic Island in Inventory View',
         description: 'Top edge of gear comparison drawer gets obscured behind island cutout.',
         category: 'ui_glitch',
-        severity: 'minor',
+        severity: 'high',
         status: 'reported',
         reproductionSteps: ['Open inventory', 'Tap second ring slot', 'Compare with equipped'],
       });

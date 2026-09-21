@@ -7,11 +7,11 @@ import { z } from 'zod';
 
 export const createIssueSchema = z.object({
   body: z.object({
-    ticketKey: z.string().min(3),
-    title: z.string().min(3),
-    description: z.string().min(5),
-    category: z.enum(['quest', 'loot_table', 'combat_balance', 'client_crash', 'shop_billing', 'server_lag', 'ui_glitch']),
-    severity: z.enum(['critical_blocker', 'major', 'moderate', 'minor']).default('moderate'),
+    ticketKey: z.string().min(2),
+    title: z.string().min(2),
+    description: z.string().min(3),
+    category: z.string().min(1).default('Task'),
+    severity: z.enum(['high', 'very_high', 'most_important']).default('high'),
     status: z.string().default('todo'),
     projectId: z.string().optional(),
     affectedEventId: z.string().optional(),
@@ -91,7 +91,7 @@ export async function getIssues(req: Request, res: Response, next: NextFunction)
       fixed: issues.filter((i) => i.status === 'fixed').length,
       verified: issues.filter((i) => i.status === 'verified').length,
       closed: issues.filter((i) => i.status === 'closed').length,
-      criticalBlockers: issues.filter((i) => i.severity === 'critical_blocker' && i.status !== 'closed').length,
+      criticalBlockers: issues.filter((i) => i.severity === 'most_important' && i.status !== 'closed' && i.status !== 'done').length,
     };
 
     res.json({

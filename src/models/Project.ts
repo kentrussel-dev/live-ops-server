@@ -6,6 +6,7 @@ export interface IProjectDocument extends Document {
   key: string;
   description?: string;
   columns: IKanbanColumn[];
+  categories: string[];
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +49,10 @@ const projectSchema = new Schema<IProjectDocument>(
         { id: 'testing', name: 'Testing', order: 3, color: 'text-purple-400' },
         { id: 'done', name: 'Done', order: 4, color: 'text-emerald-400' },
       ],
+    },
+    categories: {
+      type: [String],
+      default: ['Feature', 'Bug', 'Task', 'Quest', 'Improvement'],
     },
     createdBy: {
       type: String,

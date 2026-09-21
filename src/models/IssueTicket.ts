@@ -50,13 +50,13 @@ const issueTicketSchema = new Schema<IIssueTicketDocument>(
     },
     category: {
       type: String,
-      enum: ['quest', 'loot_table', 'combat_balance', 'client_crash', 'shop_billing', 'server_lag', 'ui_glitch'],
       required: true,
+      trim: true,
     },
     severity: {
       type: String,
-      enum: ['critical_blocker', 'major', 'moderate', 'minor'],
-      default: 'moderate',
+      enum: ['high', 'very_high', 'most_important'],
+      default: 'high',
       required: true,
     },
     status: {

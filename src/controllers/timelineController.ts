@@ -36,8 +36,8 @@ export async function getTimelineMatrix(req: Request, res: Response, next: NextF
         ],
       }),
       IssueTicket.find({
-        status: { $in: ['reported', 'investigating', 'fixed'] },
-        severity: { $in: ['critical_blocker', 'major'] },
+        status: { $in: ['reported', 'investigating', 'fixed', 'todo', 'doing', 'develop'] },
+        severity: { $in: ['most_important', 'very_high', 'high', 'critical_blocker', 'major'] },
       }),
     ]);
 

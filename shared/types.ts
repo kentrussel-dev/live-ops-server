@@ -13,6 +13,7 @@ export interface IProject {
   key: string;
   description?: string;
   columns: IKanbanColumn[];
+  categories?: string[];
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -123,7 +124,7 @@ export interface IPatchNote {
 
 export type ShopItemCategory = 'weapon' | 'armor' | 'consumable' | 'cosmetic' | 'currency_bundle';
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic';
-export type RotationStatus = 'draft' | 'scheduled' | 'active' | 'featured' | 'flash_sale' | 'expired';
+export type RotationStatus = 'draft' | 'scheduled' | 'active' | 'featured' | 'standard' | 'flash_sale' | 'expired' | 'retired' | 'vaulted';
 
 export interface IShopItemRotation {
   _id: string;
@@ -158,9 +159,10 @@ export interface IShopItemRotation {
   updatedAt: string;
 }
 
-export type IssueSeverity = 'critical_blocker' | 'major' | 'moderate' | 'minor';
+export type IssueSeverity = 'high' | 'very_high' | 'most_important';
+export type IssuePriority = IssueSeverity;
 export type IssueStatus = 'todo' | 'doing' | 'develop' | 'testing' | 'done' | string;
-export type IssueCategory = 'quest' | 'loot_table' | 'combat_balance' | 'client_crash' | 'shop_billing' | 'server_lag' | 'ui_glitch';
+export type IssueCategory = string;
 
 export interface IIssueInternalNote {
   author: string;

@@ -72,8 +72,8 @@ const shopItemRotationSchema = new Schema<IShopItemRotationDocument>(
     },
     rotationStatus: {
       type: String,
-      enum: ['draft', 'scheduled', 'active', 'featured', 'flash_sale', 'expired'],
-      default: 'draft',
+      enum: ['draft', 'scheduled', 'active', 'featured', 'standard', 'flash_sale', 'expired', 'retired', 'vaulted'],
+      default: 'standard',
       required: true,
     },
     schedule: {
